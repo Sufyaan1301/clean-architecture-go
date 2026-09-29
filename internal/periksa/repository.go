@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type DetailObat struct {
@@ -38,7 +39,25 @@ func (r *repository) FindLastAntrian(idJadwal int) int {
 }
 
 func (r *repository) SavePeriksaByPasien(daftar *domain.DaftarPoli) error {
-	err := r.db.Create(daftar).Error
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var lastDaftar domain.DaftarPoli
+		
+		// PESSIMISTIC LOCKING: Kunci data antrian jadwal ini selama transaksi berlangsung
+		// Ini mencegah goroutine/request lain membaca 'no_antrian' yang sama.
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("id_jadwal = ?", daftar.IDJadwal).
+			Order("no_antrian desc").
+			First(&lastDaftar).Error
+		
+		noAntrian := 1
+		if err == nil {
+			noAntrian = lastDaftar.NoAntrian + 1
+		}
+		
+		daftar.NoAntrian = noAntrian
+		return tx.Create(daftar).Error
+	})
+
 	if err == nil {
 		r.db.Preload("Pasien").Preload("Jadwal").Preload("Jadwal.Dokter").First(daftar, daftar.ID)
 	}

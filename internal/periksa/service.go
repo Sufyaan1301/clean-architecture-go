@@ -43,13 +43,10 @@ func (s *service) CreateDaftarPoli(idPasien int, input DaftarPoliInput) (*domain
 		return nil, hasTanggungan
 	}
 
-	lastAntrian := s.repo.FindLastAntrian(input.IDJadwal)
-
 	daftar := domain.DaftarPoli{
 		IDPasien:  uint(idPasien),
 		IDJadwal:  uint(input.IDJadwal),
 		Keluhan:   input.Keluhan,
-		NoAntrian: lastAntrian + 1,
 	}
 
 	err := s.repo.SavePeriksaByPasien(&daftar)
