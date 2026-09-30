@@ -4,6 +4,7 @@ import (
 	"be-golang-poliklinik/internal/domain"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -25,7 +26,13 @@ func NewService(repo Repository) *service {
 	return &service{repo}
 }
 
-var jwtSecret = []byte("rahasia_super_poliklinik")
+func getJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return []byte("rahasia_super_poliklinik") // Fallback
+	}
+	return []byte(secret)
+}
 
 type PasienRegisterInput struct {
 	Nama     string `json:"nama" binding:"required"`
@@ -77,7 +84,7 @@ func (s *service) Login(email, password string) (string, *domain.User, error) {
 		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Token berlaku 24 jam
 	})
 
-	tokenString, err := token.SignedString([]byte("rahasia_super_poliklinik"))
+	tokenString, err := token.SignedString(getJWTSecret())
 	if err != nil {
 		return "", nil, err
 	}
@@ -91,7 +98,7 @@ func (s *service) ValidateToken(tokenString string) (*jwt.Token, error) {
 		return nil, errors.New("token sudah tidak berlaku, silakan login kembali")
 	}
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return getJWTSecret(), nil
 	})
 }
 

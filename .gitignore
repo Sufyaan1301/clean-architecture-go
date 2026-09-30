@@ -1,0 +1,28 @@
+# Environment Variables (Sangat Penting untuk diabaikan!)
+.env
+
+# Compiled Binaries (File hasil build tidak perlu di-upload)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+poliklinik-api.exe
+
+# Go workspace and caches
+go.work
+go.work.sum
+
+# Temporary files & Air Live Reload
+tmp/
+.air/
+
+# User Uploads (Gambar/File yang diunggah pengguna jangan dimasukkan ke repo)
+uploads/
+tests/uploads/
+
+# OS specific files
+.DS_Store
+Thumbs.db

@@ -47,6 +47,7 @@ func TestCreateDaftarPoli_Berhasil(t *testing.T) {
 		},
 		MockSavePeriksaByPasien: func(daftar *domain.DaftarPoli) error {
 			daftar.ID = 1 // Simulasi berhasil simpan ke DB
+			daftar.NoAntrian = 11 // Karena sekarang logika penambahan antrian pindah ke Repository (Pessimistic Lock)
 			return nil
 		},
 	}

@@ -2,7 +2,9 @@ package config
 
 import (
 	"be-golang-poliklinik/internal/domain"
+	"fmt"
 	"log"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
@@ -12,7 +14,22 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-	dsn := "root:@tcp(127.0.0.1:3306)/poliklinik_golang_db?charset=utf8mb4&parseTime=True&loc=Local"
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASS")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	// Fallback jika .env belum dimuat dengan benar (berguna untuk testing / backward compatibility)
+	if dbUser == "" {
+		dbUser = "root"
+		dbHost = "127.0.0.1"
+		dbPort = "3306"
+		dbName = "poliklinik_golang_db"
+	}
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPass, dbHost, dbPort, dbName)
+	
 	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {

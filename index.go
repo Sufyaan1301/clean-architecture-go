@@ -14,11 +14,24 @@ import (
 	"be-golang-poliklinik/internal/router"
 	"flag"
 	"log"
+	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Muat file .env
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Peringatan: File .env tidak ditemukan, menggunakan environment bawaan OS")
+	}
+
+	// Atur Mode GIN (Release/Debug)
+	if os.Getenv("GIN_MODE") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	runMigrate := flag.Bool("migrate", false, "Run database migration")
 	runSeed := flag.Bool("seed", false, "Run database seeding")
@@ -73,6 +86,13 @@ func main() {
 	pembayaranHandler := pembayaran.NewHandler(pembayaranService)
 
 	r := gin.Default()
+	
+	// Konfigurasi CORS agar aplikasi Flutter Web / Frontend lain bisa memanggil API ini
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	r.Use(cors.New(corsConfig))
+
 	r.MaxMultipartMemory = 5 << 20
 	r.Static("/uploads", "./uploads")
 
@@ -90,6 +110,11 @@ func main() {
 
 	router.SetupRoutes(r, h, authService)
 
-	log.Println("Server Backend Poliklinik berjalan di port 8080...")
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server Backend Poliklinik berjalan di port %s...\n", port)
+	r.Run(":" + port)
 }
